@@ -5,47 +5,109 @@ fn dot_product(v1: &[f64], v2: &[f64]) -> f64 {
 fn sigmoid(x: f64) -> f64 {
     1.0 / (1.0 + (-x).exp())
 }
-fn predict(features: &[f64], weights: &[f64]) -> f64 {
-    sigmoid(dot_product(features, weights))
+
+fn approx_sigmoid(x: f64) -> f64 {
+    let cuts = [-5.0, -2.5, 2.5, 5.0];
+
+    // Calculate le
+    let mut le = vec![0.0];
+    for &cut in &cuts {
+        le.push(if x <= cut { 1.0 } else { 0.0 });
+    }
+    le.push(1.0);
+
+    // Calculate select
+    let mut select = Vec::new();
+    for i in 0..5 {
+        select.push(le[i + 1] - le[i]);
+    }
+
+    let outputs = vec![
+        10f64.powi(-4),
+        0.02776 * x + 0.145,
+        0.17 * x + 0.5,
+        0.02776 * x + 0.85498,
+        1.0 - 10f64.powi(-4),
+    ];
+
+    // Calculate the sum of selected outputs
+    select
+        .iter()
+        .zip(outputs.iter())
+        .map(|(&s, &o)| s * o)
+        .sum()
+}
+
+fn get_prediction(features: &[f64], weights: &[f64], bias: f64) -> f64 {
+    approx_sigmoid(dot_product(features, weights) + bias)
 }
 
 fn compute_gradient(
     features: &[Vec<f64>], // Each row is a data point
     labels: &[f64],        // Corresponding labels
     weights: &[f64],       // Current weights
-) -> Vec<f64> {
+    bias: f64,             // Current bias
+) -> (Vec<f64>, f64) {
+    // Return gradients for weights and bias
     let m = features.len() as f64;
 
-    // Compute gradient for each weight
-    let mut gradients = vec![0.0; weights.len()];
+    let mut weight_gradients = vec![0.0; weights.len()];
+    let mut bias_gradient = 0.0;
+
     for i in 0..features.len() {
-        let h = sigmoid(dot_product(&features[i], weights));
-        let error = h - labels[i];
+        let prediction = get_prediction(&features[i], weights, bias);
+        let error = prediction - labels[i];
+
+        // Compute gradients for weights
         for j in 0..weights.len() {
-            gradients[j] += error * features[i][j];
+            weight_gradients[j] += features[i][j] * error;
         }
+
+        // Compute gradient for bias
+        bias_gradient += error;
     }
 
     // Average the gradients
-    gradients.iter().map(|g| g / m).collect()
+    (
+        weight_gradients.iter().map(|g| g / m).collect(),
+        bias_gradient / m,
+    )
 }
-fn update_weights(weights: &mut [f64], gradients: &[f64], learning_rate: f64) {
+
+fn update_weights(
+    weights: &mut [f64],
+    bias: &mut f64,
+    gradients: &[f64],
+    bias_gradient: f64,
+    learning_rate: f64,
+) {
     for (w, g) in weights.iter_mut().zip(gradients.iter()) {
         *w -= learning_rate * g;
     }
+    *bias -= learning_rate * bias_gradient;
 }
+
 fn train(
     features: &[Vec<f64>],
     labels: &[f64],
-    mut weights: Vec<f64>,
     learning_rate: f64,
     epochs: usize,
-) -> Vec<f64> {
+) -> (Vec<f64>, f64) {
+    // Initialize weights and bias within the training function
+    let mut weights = vec![0.0; features[0].len()]; // Zero-initialized weights
+    let mut bias = 0.0; // Zero-initialized bias
+
     for _ in 0..epochs {
-        let gradients = compute_gradient(features, labels, &weights);
-        update_weights(&mut weights, &gradients, learning_rate);
+        let (gradients, bias_gradient) = compute_gradient(features, labels, &weights, bias);
+        update_weights(
+            &mut weights,
+            &mut bias,
+            &gradients,
+            bias_gradient,
+            learning_rate,
+        );
     }
-    weights
+    (weights, bias)
 }
 
 fn main() {
@@ -55,241 +117,86 @@ fn main() {
 #[test]
 fn test_setosa_versicolor() {
     // Define the dataset (features and labels)
-let inputs = vec![
-        vec![
-                5.1,
-                3.5,
-                1.4,
-                0.2,
-        ],
-        vec![
-                4.9,
-                3.0,
-                1.4,
-                0.2,
-        ],
-        vec![
-                4.7,
-                3.2,
-                1.3,
-                0.2,
-        ],
-        vec![
-                4.6,
-                3.1,
-                1.5,
-                0.2,
-        ],
-        vec![
-                5.0,
-                3.6,
-                1.4,
-                0.2,
-        ],
-        vec![
-                5.4,
-                3.9,
-                1.7,
-                0.4,
-        ],
-        vec![
-                4.6,
-                3.4,
-                1.4,
-                0.3,
-        ],
-        vec![
-                5.0,
-                3.4,
-                1.5,
-                0.2,
-        ],
-        vec![
-                4.4,
-                2.9,
-                1.4,
-                0.2,
-        ],
-        vec![
-                4.9,
-                3.1,
-                1.5,
-                0.1,
-        ],
-        vec![
-                5.4,
-                3.7,
-                1.5,
-                0.2,
-        ],
-        vec![
-                4.8,
-                3.4,
-                1.6,
-                0.2,
-        ],
-        vec![
-                4.8,
-                3.0,
-                1.4,
-                0.1,
-        ],
-        vec![
-                4.3,
-                3.0,
-                1.1,
-                0.1,
-        ],
-        vec![
-                5.8,
-                4.0,
-                1.2,
-                0.2,
-        ],
-        vec![
-                5.7,
-                4.4,
-                1.5,
-                0.4,
-        ],
-        vec![
-                5.4,
-                3.9,
-                1.3,
-                0.4,
-        ],
-        vec![
-                5.1,
-                3.5,
-                1.4,
-                0.3,
-        ],
-        vec![
-                5.7,
-                3.8,
-                1.7,
-                0.3,
-        ],
-        vec![
-                5.1,
-                3.8,
-                1.5,
-                0.3,
-        ],
-        vec![
-                5.4,
-                3.4,
-                1.7,
-                0.2,
-        ],
-        vec![
-                5.1,
-                3.7,
-                1.5,
-                0.4,
-        ],
-        vec![
-                4.6,
-                3.6,
-                1.0,
-                0.2,
-        ],
-        vec![
-                5.1,
-                3.3,
-                1.7,
-                0.5,
-        ],
-        vec![
-                4.8,
-                3.4,
-                1.9,
-                0.2,
-        ],
-        vec![
-                5.0,
-                3.0,
-                1.6,
-                0.2,
-        ],
-        vec![
-                5.0,
-                3.4,
-                1.6,
-                0.4,
-        ],
-        vec![
-                5.2,
-                3.5,
-                1.5,
-                0.2,
-        ],
-        vec![
-                5.2,
-                3.4,
-                1.4,
-                0.2,
-        ],
-        vec![
-                4.7,
-                3.2,
-                1.6,
-                0.2,
-        ],
-];
+    let inputs = vec![
+        vec![5.1, 3.5, 1.4, 0.2],
+        vec![4.9, 3.0, 1.4, 0.2],
+        vec![4.7, 3.2, 1.3, 0.2],
+        vec![4.6, 3.1, 1.5, 0.2],
+        vec![5.0, 3.6, 1.4, 0.2],
+        vec![5.4, 3.9, 1.7, 0.4],
+        vec![4.6, 3.4, 1.4, 0.3],
+        vec![5.0, 3.4, 1.5, 0.2],
+        vec![4.4, 2.9, 1.4, 0.2],
+        vec![4.9, 3.1, 1.5, 0.1],
+        vec![5.4, 3.7, 1.5, 0.2],
+        vec![4.8, 3.4, 1.6, 0.2],
+        vec![4.8, 3.0, 1.4, 0.1],
+        vec![4.3, 3.0, 1.1, 0.1],
+        vec![5.8, 4.0, 1.2, 0.2],
+        vec![5.7, 4.4, 1.5, 0.4],
+        vec![5.4, 3.9, 1.3, 0.4],
+        vec![5.1, 3.5, 1.4, 0.3],
+        vec![5.7, 3.8, 1.7, 0.3],
+        vec![5.1, 3.8, 1.5, 0.3],
+        vec![5.4, 3.4, 1.7, 0.2],
+        vec![5.1, 3.7, 1.5, 0.4],
+        vec![4.6, 3.6, 1.0, 0.2],
+        vec![5.1, 3.3, 1.7, 0.5],
+        vec![4.8, 3.4, 1.9, 0.2],
+        vec![5.0, 3.0, 1.6, 0.2],
+        vec![5.0, 3.4, 1.6, 0.4],
+        vec![5.2, 3.5, 1.5, 0.2],
+        vec![5.2, 3.4, 1.4, 0.2],
+        vec![4.7, 3.2, 1.6, 0.2],
+    ];
 
-let labels = vec![
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-];
+    let labels = vec![
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    ];
 
-    // Initialize weights
-    let weights = vec![0.0; inputs[0].len()];
     let learning_rate = 0.1;
     let epochs = 10;
 
     // Train the model
-    let trained_weights = train(&inputs, &labels, weights, learning_rate, epochs);
+    let (trained_weights, trained_bias) = train(&inputs, &labels, learning_rate, epochs);
 
     // Make predictions
     println!("Trained Weights: {:?}", trained_weights);
+    // TODO Convert to Quantized value
+    // divide by 2^-16, let's call result y
+    // return p-y where p = 21888242871839275222246405745257275088548364400416034343698204186575808495617
+
     for (i, input) in inputs.iter().enumerate() {
-        let prediction = predict(input, &trained_weights);
+        let prediction = get_prediction(input, &trained_weights, trained_bias);
         // println!(
         //     "Data Point: {:?}, True Label: {}, Predicted: {}",
         //     input, labels[i], prediction
         // );
     }
     /*
-    Epochs = 10:
-Trained Weights: [-0.48510845361963106, -0.3324190006665653, -0.14260313309680092, -0.023492916750428465]
-      */
+        Epochs = 10:
+[-0.5252033301021997, -0.3599251494270883, -0.15437820313086892, -0.02547627906962113]
+Epochs = 100:
+[-0.6926971464326838, -0.4736125559888238, -0.20396579391537806, -0.03248697477463643]
+          */
+}
+
+#[test]
+fn test_approx_sigmoid() {
+    let x = 1.0;
+    let approx_sigmoid_res = approx_sigmoid(x);
+    println!("{}", approx_sigmoid_res); // 0.67
+
+    let x = 0.1;
+    let approx_sigmoid_res = approx_sigmoid(x);
+    println!("{}", approx_sigmoid_res); // 0.517
+
+    let x = -0.5;
+    let approx_sigmoid_res = approx_sigmoid(x);
+    println!("{}", approx_sigmoid_res); // 0.415
+
+    let x = -1.1;
+    let approx_sigmoid_res = approx_sigmoid(x);
+    println!("{}", approx_sigmoid_res); // 0.31299999999999994
 }
