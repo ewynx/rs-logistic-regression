@@ -118,62 +118,240 @@ fn main() {
 fn test_setosa_versicolor() {
     // Define the dataset (features and labels)
     let inputs = vec![
-        vec![5.1, 3.5, 1.4, 0.2],
-        vec![4.9, 3.0, 1.4, 0.2],
-        vec![4.7, 3.2, 1.3, 0.2],
-        vec![4.6, 3.1, 1.5, 0.2],
-        vec![5.0, 3.6, 1.4, 0.2],
-        vec![5.4, 3.9, 1.7, 0.4],
-        vec![4.6, 3.4, 1.4, 0.3],
-        vec![5.0, 3.4, 1.5, 0.2],
-        vec![4.4, 2.9, 1.4, 0.2],
-        vec![4.9, 3.1, 1.5, 0.1],
-        vec![5.4, 3.7, 1.5, 0.2],
-        vec![4.8, 3.4, 1.6, 0.2],
-        vec![4.8, 3.0, 1.4, 0.1],
-        vec![4.3, 3.0, 1.1, 0.1],
-        vec![5.8, 4.0, 1.2, 0.2],
-        vec![5.7, 4.4, 1.5, 0.4],
-        vec![5.4, 3.9, 1.3, 0.4],
-        vec![5.1, 3.5, 1.4, 0.3],
-        vec![5.7, 3.8, 1.7, 0.3],
-        vec![5.1, 3.8, 1.5, 0.3],
-        vec![5.4, 3.4, 1.7, 0.2],
-        vec![5.1, 3.7, 1.5, 0.4],
-        vec![4.6, 3.6, 1.0, 0.2],
-        vec![5.1, 3.3, 1.7, 0.5],
-        vec![4.8, 3.4, 1.9, 0.2],
-        vec![5.0, 3.0, 1.6, 0.2],
-        vec![5.0, 3.4, 1.6, 0.4],
-        vec![5.2, 3.5, 1.5, 0.2],
-        vec![5.2, 3.4, 1.4, 0.2],
-        vec![4.7, 3.2, 1.6, 0.2],
-    ];
+      vec![
+              5.5,
+              2.6,
+              4.4,
+              1.2,
+      ],
+      vec![
+              5.0,
+              3.4,
+              1.6,
+              0.4,
+      ],
+      vec![
+              5.2,
+              4.1,
+              1.5,
+              0.1,
+      ],
+      vec![
+              6.5,
+              2.8,
+              4.6,
+              1.5,
+      ],
+      vec![
+              5.6,
+              3.0,
+              4.5,
+              1.5,
+      ],
+      vec![
+              4.6,
+              3.2,
+              1.4,
+              0.2,
+      ],
+      vec![
+              6.0,
+              2.2,
+              4.0,
+              1.0,
+      ],
+      vec![
+              5.1,
+              3.4,
+              1.5,
+              0.2,
+      ],
+      vec![
+              6.6,
+              2.9,
+              4.6,
+              1.3,
+      ],
+      vec![
+              4.7,
+              3.2,
+              1.3,
+              0.2,
+      ],
+      vec![
+              6.3,
+              3.3,
+              4.7,
+              1.6,
+      ],
+      vec![
+              5.2,
+              3.4,
+              1.4,
+              0.2,
+      ],
+      vec![
+              5.8,
+              2.6,
+              4.0,
+              1.2,
+      ],
+      vec![
+              6.1,
+              2.8,
+              4.0,
+              1.3,
+      ],
+      vec![
+              5.7,
+              2.8,
+              4.1,
+              1.3,
+      ],
+      vec![
+              5.8,
+              4.0,
+              1.2,
+              0.2,
+      ],
+      vec![
+              4.8,
+              3.4,
+              1.9,
+              0.2,
+      ],
+      vec![
+              5.6,
+              3.0,
+              4.5,
+              1.5,
+      ],
+      vec![
+              4.9,
+              3.0,
+              1.4,
+              0.2,
+      ],
+      vec![
+              5.7,
+              3.8,
+              1.7,
+              0.3,
+      ],
+      vec![
+              5.0,
+              3.3,
+              1.4,
+              0.2,
+      ],
+      vec![
+              6.2,
+              2.9,
+              4.3,
+              1.3,
+      ],
+      vec![
+              5.1,
+              3.8,
+              1.9,
+              0.4,
+      ],
+      vec![
+              4.8,
+              3.0,
+              1.4,
+              0.1,
+      ],
+      vec![
+              5.0,
+              3.0,
+              1.6,
+              0.2,
+      ],
+      vec![
+              4.4,
+              3.2,
+              1.3,
+              0.2,
+      ],
+      vec![
+              4.6,
+              3.2,
+              1.4,
+              0.2,
+      ],
+      vec![
+              4.5,
+              2.3,
+              1.3,
+              0.3,
+      ],
+      vec![
+              5.1,
+              3.8,
+              1.9,
+              0.4,
+      ],
+      vec![
+              5.1,
+              3.5,
+              1.4,
+              0.3,
+      ],
+];
 
     let labels = vec![
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    ];
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0,
+        0.0,
+        1.0,
+        0.0,
+        1.0,
+        0.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+];
 
     let learning_rate = 0.1;
-    let epochs = 10;
+    let epochs = 1;
 
     // Train the model
     let (trained_weights, trained_bias) = train(&inputs, &labels, learning_rate, epochs);
 
-    // Make predictions
-    println!("Trained Weights: {:?}", trained_weights);
-    // TODO Convert to Quantized value
-    // divide by 2^-16, let's call result y
-    // return p-y where p = 21888242871839275222246405745257275088548364400416034343698204186575808495617
+    // Collect predictions
+    let predictions: Vec<f64> = inputs
+        .iter()
+        .map(|input| get_prediction(input, &trained_weights, trained_bias))
+        .collect();
 
-    for (i, input) in inputs.iter().enumerate() {
-        let prediction = get_prediction(input, &trained_weights, trained_bias);
-        // println!(
-        //     "Data Point: {:?}, True Label: {}, Predicted: {}",
-        //     input, labels[i], prediction
-        // );
-    }
+    // Calculate accuracy
+    let accuracy = calculate_accuracy(&predictions, &labels);
+
+    println!("Trained Weights: {:?}", trained_weights);
+    println!("Trained Bias: {:?}", trained_bias);
+    println!("Predictions: {:?}", predictions);
+    println!("Accuracy: {:.2}%", accuracy * 100.0);
     /*
         Epochs = 10:
 [-0.5252033301021997, -0.3599251494270883, -0.15437820313086892, -0.02547627906962113]
