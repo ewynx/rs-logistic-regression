@@ -42,12 +42,12 @@ fn get_prediction(features: &[f64], weights: &[f64], bias: f64) -> f64 {
     approx_sigmoid(dot_product(features, weights) + bias)
 }
 
-fn compute_gradient(
-    features: &[Vec<f64>], // Each row is a data point
-    labels: &[f64],        // Corresponding labels
-    weights: &[f64],       // Current weights
-    bias: f64,             // Current bias
-) -> (Vec<f64>, f64) {
+fn compute_gradient<const N: usize, const M: usize>(
+    features: &[[f64; M]; N], // Each row is a data point
+    labels: &[f64],           // Corresponding labels
+    weights: &[f64],          // Current weights
+    bias: f64,                // Current bias
+) -> ([f64; M], f64) {
     // Return gradients for weights and bias
     let m = features.len() as f64;
 
@@ -68,10 +68,13 @@ fn compute_gradient(
     }
 
     // Average the gradients
-    (
-        weight_gradients.iter().map(|g| g / m).collect(),
-        bias_gradient / m,
-    )
+    let weights: [f64; M] = weight_gradients
+        .iter()
+        .map(|g| g / m)
+        .collect::<Vec<f64>>()
+        .try_into()
+        .expect("Array size mismatch");
+    (weights, bias_gradient / m)
 }
 
 fn update_weights(
@@ -87,14 +90,14 @@ fn update_weights(
     *bias -= learning_rate * bias_gradient;
 }
 
-fn train(
-    features: &[Vec<f64>],
-    labels: &[f64],
+fn train<const N: usize, const M: usize>(
+    features: &[[f64; M]; N],
+    labels: &[f64; N],
     learning_rate: f64,
     epochs: usize,
-) -> (Vec<f64>, f64) {
+) -> ([f64; M], f64) {
     // Initialize weights and bias within the training function
-    let mut weights = vec![0.0; features[0].len()]; // Zero-initialized weights
+    let mut weights = [0.0; M]; // Zero-initialized weights
     let mut bias = 0.0; // Zero-initialized bias
 
     for _ in 0..epochs {
@@ -110,254 +113,89 @@ fn train(
     (weights, bias)
 }
 
+fn train_multi_class<const N: usize, const M: usize, const C: usize>(
+    epochs: usize,
+    inputs: &[[f64; M]; N],
+    labels: &[[f64; N]; C],
+    learning_rate: f64,
+) -> [([f64; M], f64); C] {
+    let mut result_parameters = [([0.0; M], 0.0); C]; // Initialize the result array
+    for i in 0..C {
+        let parameters = train::<N, M>(
+            inputs,
+            &labels[i], // Pass labels for the i-th class
+            learning_rate,
+            epochs,
+        );
+        result_parameters[i] = parameters;
+    }
+    result_parameters
+}
+
 fn main() {
     println!("Hello, world!");
 }
 
 #[test]
 fn test_setosa_versicolor() {
+    const M: usize = 4;
+    const N: usize = 30;
     // Define the dataset (features and labels)
-    let inputs = vec![
-      vec![
-              5.5,
-              2.6,
-              4.4,
-              1.2,
-      ],
-      vec![
-              5.0,
-              3.4,
-              1.6,
-              0.4,
-      ],
-      vec![
-              5.2,
-              4.1,
-              1.5,
-              0.1,
-      ],
-      vec![
-              6.5,
-              2.8,
-              4.6,
-              1.5,
-      ],
-      vec![
-              5.6,
-              3.0,
-              4.5,
-              1.5,
-      ],
-      vec![
-              4.6,
-              3.2,
-              1.4,
-              0.2,
-      ],
-      vec![
-              6.0,
-              2.2,
-              4.0,
-              1.0,
-      ],
-      vec![
-              5.1,
-              3.4,
-              1.5,
-              0.2,
-      ],
-      vec![
-              6.6,
-              2.9,
-              4.6,
-              1.3,
-      ],
-      vec![
-              4.7,
-              3.2,
-              1.3,
-              0.2,
-      ],
-      vec![
-              6.3,
-              3.3,
-              4.7,
-              1.6,
-      ],
-      vec![
-              5.2,
-              3.4,
-              1.4,
-              0.2,
-      ],
-      vec![
-              5.8,
-              2.6,
-              4.0,
-              1.2,
-      ],
-      vec![
-              6.1,
-              2.8,
-              4.0,
-              1.3,
-      ],
-      vec![
-              5.7,
-              2.8,
-              4.1,
-              1.3,
-      ],
-      vec![
-              5.8,
-              4.0,
-              1.2,
-              0.2,
-      ],
-      vec![
-              4.8,
-              3.4,
-              1.9,
-              0.2,
-      ],
-      vec![
-              5.6,
-              3.0,
-              4.5,
-              1.5,
-      ],
-      vec![
-              4.9,
-              3.0,
-              1.4,
-              0.2,
-      ],
-      vec![
-              5.7,
-              3.8,
-              1.7,
-              0.3,
-      ],
-      vec![
-              5.0,
-              3.3,
-              1.4,
-              0.2,
-      ],
-      vec![
-              6.2,
-              2.9,
-              4.3,
-              1.3,
-      ],
-      vec![
-              5.1,
-              3.8,
-              1.9,
-              0.4,
-      ],
-      vec![
-              4.8,
-              3.0,
-              1.4,
-              0.1,
-      ],
-      vec![
-              5.0,
-              3.0,
-              1.6,
-              0.2,
-      ],
-      vec![
-              4.4,
-              3.2,
-              1.3,
-              0.2,
-      ],
-      vec![
-              4.6,
-              3.2,
-              1.4,
-              0.2,
-      ],
-      vec![
-              4.5,
-              2.3,
-              1.3,
-              0.3,
-      ],
-      vec![
-              5.1,
-              3.8,
-              1.9,
-              0.4,
-      ],
-      vec![
-              5.1,
-              3.5,
-              1.4,
-              0.3,
-      ],
-];
+    let inputs: [[f64; M]; N] = [
+        [5.5, 2.6, 4.4, 1.2],
+        [5.0, 3.4, 1.6, 0.4],
+        [5.2, 4.1, 1.5, 0.1],
+        [6.5, 2.8, 4.6, 1.5],
+        [5.6, 3.0, 4.5, 1.5],
+        [4.6, 3.2, 1.4, 0.2],
+        [6.0, 2.2, 4.0, 1.0],
+        [5.1, 3.4, 1.5, 0.2],
+        [6.6, 2.9, 4.6, 1.3],
+        [4.7, 3.2, 1.3, 0.2],
+        [6.3, 3.3, 4.7, 1.6],
+        [5.2, 3.4, 1.4, 0.2],
+        [5.8, 2.6, 4.0, 1.2],
+        [6.1, 2.8, 4.0, 1.3],
+        [5.7, 2.8, 4.1, 1.3],
+        [5.8, 4.0, 1.2, 0.2],
+        [4.8, 3.4, 1.9, 0.2],
+        [5.6, 3.0, 4.5, 1.5],
+        [4.9, 3.0, 1.4, 0.2],
+        [5.7, 3.8, 1.7, 0.3],
+        [5.0, 3.3, 1.4, 0.2],
+        [6.2, 2.9, 4.3, 1.3],
+        [5.1, 3.8, 1.9, 0.4],
+        [4.8, 3.0, 1.4, 0.1],
+        [5.0, 3.0, 1.6, 0.2],
+        [4.4, 3.2, 1.3, 0.2],
+        [4.6, 3.2, 1.4, 0.2],
+        [4.5, 2.3, 1.3, 0.3],
+        [5.1, 3.8, 1.9, 0.4],
+        [5.1, 3.5, 1.4, 0.3],
+    ];
 
-    let labels = vec![
-        1.0,
-        0.0,
-        0.0,
-        1.0,
-        1.0,
-        0.0,
-        1.0,
-        0.0,
-        1.0,
-        0.0,
-        1.0,
-        0.0,
-        1.0,
-        1.0,
-        1.0,
-        0.0,
-        0.0,
-        1.0,
-        0.0,
-        0.0,
-        0.0,
-        1.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-];
+    let labels = [
+        1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0,
+        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    ];
 
     let learning_rate = 0.1;
-    let epochs = 1;
+    let epochs = 100;
 
     // Train the model
     let (trained_weights, trained_bias) = train(&inputs, &labels, learning_rate, epochs);
 
-    // Collect predictions
-    let predictions: Vec<f64> = inputs
-        .iter()
-        .map(|input| get_prediction(input, &trained_weights, trained_bias))
-        .collect();
-
-    // Calculate accuracy
-    let accuracy = calculate_accuracy(&predictions, &labels);
-
     println!("Trained Weights: {:?}", trained_weights);
     println!("Trained Bias: {:?}", trained_bias);
-    println!("Predictions: {:?}", predictions);
-    println!("Accuracy: {:.2}%", accuracy * 100.0);
     /*
-        Epochs = 10:
-[-0.5252033301021997, -0.3599251494270883, -0.15437820313086892, -0.02547627906962113]
-Epochs = 100:
-[-0.6926971464326838, -0.4736125559888238, -0.20396579391537806, -0.03248697477463643]
-          */
+    epoch = 10
+    Trained Weights: [-0.12457363944662814, -0.31141632749629106, 0.42535906423765324, 0.18659335247085568]
+    Trained Bias: -0.06289986228129817
+
+    epoch = 100
+    Trained Weights: [-0.3726472362241575, -1.1493118151014219, 1.7181282744314055, 0.7479174088260542]
+    Trained Bias: -0.23622522154644904
+    */
 }
 
 #[test]
